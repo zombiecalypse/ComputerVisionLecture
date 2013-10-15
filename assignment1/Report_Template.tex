@@ -1,0 +1,117 @@
+\documentclass{paper}
+
+%\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{color}
+
+
+% load package with ``framed'' and ``numbered'' option.
+%\usepackage[framed,numbered,autolinebreaks,useliterate]{mcode}
+
+% something NOT relevant to the usage of the package.
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{18pt}
+
+
+
+
+
+
+\usepackage[latin1]{inputenc} 
+\usepackage[T1]{fontenc} 
+
+\usepackage{listings} 
+\lstset{% 
+   language=Matlab, 
+   basicstyle=\small\ttfamily, 
+} 
+
+
+
+\title{Report Template}
+
+
+
+\author{Name Surname\\Matriculation number}
+% //////////////////////////////////////////////////
+
+
+\begin{document}
+
+
+
+\maketitle
+
+
+% Add figures:
+%\begin{figure}[t]
+%%\begin{center}
+%\quad\quad   \includegraphics[width=1\linewidth]{ass2}
+%%\end{center}
+%
+%\label{fig:performance}
+%\end{figure}
+
+\section{Photometric Stereo (Due on 29/10/2013)}
+
+
+
+\paragraph{1. Calibration (35 points)}
+In this section you should:
+
+\begin{itemize}
+\item Describe the algorithm you used for calculating the light directions given the images of the chrome sphere for different lighting conditions. You need to provide the formula you used to calculate such directions given: 1) The radius of the sphere; 2) The 2D coordinates of the light source highlights on the sphere; 3) The 2D coordinates of the centre of the sphere; 4) The unit vector $(0,0,-1)$ that points towards the camera.
+\item The calculated light vector in the format:
+
+\begin{align}
+\mathbf{L}= \left[ \begin{array}{cccccccccccccc}
+L_{1x} & L_{2x} & L_{3x} & L_{4x} & L_{5x} & L_{6x} & L_{7x} & L_{8x} & L_{9x} & L_{10x} & L_{11x} & L_{12z}\\
+L_{1y} & L_{2y} & L_{3y} & L_{4y} & L_{5y} & L_{6y} & L_{7y} & L_{8y} & L_{9y} & L_{10y} & L_{11y} & L_{12y}\\
+L_{1z} & L_{2z} & L_{3z} & L_{4z} & L_{5z} & L_{6z} & L_{7z} & L_{8z} & L_{9z} & L_{10z} & L_{11z} & L_{12z}
+\end{array} \right] \nonumber
+\end{align}
+\end{itemize}
+
+
+\paragraph{2. Computing Surface Normals and Grey Albedo (30 points)}
+
+In this section you should:
+
+\begin{itemize}
+\item Describe the algorithm you used for calculating the albedo and normals given the light directions you estimated (or the approximated one which is provided in case you did not complete the task 1). You need to provide the formula you used to calculate the normals.
+
+\item Display the image of the recovered albedo map for each dataset.
+\item Display the images of the three normal components (x,y and z directions) or a single colour image with the x,y and z components instead of the R,G, and B components rispectively.
+\item Display the images of the three albedo maps for each dataset. 
+\end{itemize}
+
+
+
+\paragraph{3. Surface Fitting (35 points)}
+
+In this section you should:
+
+\begin{itemize}
+\item Describe the algorithm you used for calculating the depth map given the normals you calculated before.
+\item Display the image of the depth map (in colour or grayscale) for each dataset, where higher intensity values indicate points closer to the camera.
+\item Describe, in no more than a few paragraphs, your assessment of when the technique works well, and when there are failures. When the technique fails to produce nice results, please explain as best as you can what the likely causes of the problems are.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ \end{document}
