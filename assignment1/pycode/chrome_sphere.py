@@ -13,10 +13,10 @@ def locate_ball(mask):
     xm = np.array(np.argmax(mask, axis=0).nonzero()).flatten()
     ym = np.array(np.argmax(mask, axis=1).nonzero()).flatten()
     # Horrible abuse of functions or pure genius - you decide.
-    radius = np.array([xm.shape[0], ym.shape[0]]).mean()
+    diam = np.mean([xm.shape[0], ym.shape[0]])
     cy = ym.mean()
     cx = xm.mean()
-    return (np.array([cx, cy]), radius)
+    return (np.array([cy, cx]), diam/2)
 
 def locate_reflection(img):
     """Takes a masked img and returns the location position of the reflection."""
@@ -43,18 +43,13 @@ def fit(image, c, R):
 
     d = (p-c)/R
     log.debug("Dir: %s", d)
-    phi = atan2(d[0], d[1])
     r = l.norm(d)
-    theta = -acos(r)
+    theta = acos(r)
     log.debug(u"r:   %s", r)
     log.debug(u"θ:   %s", theta)
-    log.debug(u"φ:   %s", phi)
 
-    return np.array([
-            sin(theta)*cos(phi),
-            sin(theta)*sin(phi),
-            cos(theta),
-    ])
+    n = np.hstack([d, [-sin(theta)]])
+    return n
 
 if __name__ == '__main__':
     import sys
