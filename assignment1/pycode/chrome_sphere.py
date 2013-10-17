@@ -2,31 +2,38 @@
 from math import *
 from scipy.misc import imread
 from scipy import linalg as l
+from scipy import ndimage
+import matplotlib.pyplot as plt
 import numpy as np
 import logging
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
 
 def locate_ball(mask):
-    """Returns ((center_x, center_y), radius) of the sphere."""
-    radiusy, cy = max((len([i for i in r if i.all()]), j) for j,r in enumerate(mask))
-    radiusx, cx = max((len([i for i in r if i.all()]), j) for j,r in enumerate(
-        np.transpose(mask, (1, 0))))
-    radius = (radiusy+radiusx)/2
-    return (np.array([cx, cy]), float(radius))
+    """Returns (center, radius) of the sphere."""
+    xm = np.array(np.argmax(mask, axis=0).nonzero()).flatten()
+    ym = np.array(np.argmax(mask, axis=1).nonzero()).flatten()
+    # Horrible abuse of functions or pure genius - you decide.
+    radius = np.array([xm.shape[0], ym.shape[0]]).mean()
+    cy = ym.mean()
+    cx = xm.mean()
+    return (np.array([cx, cy]), radius)
 
 def locate_reflection(img):
-    """Takes a masked img and returns the location (x,y) of the reflection."""
+    """Takes a masked img and returns the location position of the reflection."""
     arr = np.unravel_index(np.argmax(img), img.shape)
-    return np.array([arr[1],arr[0]])
+    return np.array(arr)
 
-def fit(image, mask):
+def fit(image, c, R):
     """Gives the direction of the light relative to the scene."""
+    # Since we're using the brightest pixel, we want to ensure that the
+    # neighbourhood is bright as well.
+    image = ndimage.gaussian_filter(image, sigma=2)
+
     # First we need to find the center and the extend of the ball in 
     # order to evaluate where the light comes from.
+    #
 
-    c, R = locate_ball(mask)
-    p = locate_reflection(image * mask)
+    p = locate_reflection(image)
 
     log.debug("CoS: %s", c)
     log.debug("RoS: %s", R)
@@ -36,21 +43,29 @@ def fit(image, mask):
 
     d = (p-c)/R
     log.debug("Dir: %s", d)
-    phi = atan2(d[1], d[0])
+    phi = atan2(d[0], d[1])
     r = l.norm(d)
-    theta = acos(r)
+    theta = -acos(r)
     log.debug(u"r:   %s", r)
     log.debug(u"θ:   %s", theta)
     log.debug(u"φ:   %s", phi)
 
     return np.array([
             sin(theta)*cos(phi),
-            -cos(theta),
             sin(theta)*sin(phi),
+            cos(theta),
     ])
 
 if __name__ == '__main__':
+    import sys
+    if len(sys.argv) > 1:
+        log.setLevel(logging.DEBUG)
     logging.basicConfig()
     mask = imread('../Images/chrome/chrome.mask.png', True)
-    for i in [3]:# range(12):
-        print fit(imread('../Images/chrome/chrome.%i.png' % i, True), mask)
+    c, R = locate_ball(mask)
+    for i in [22,23,24]: #range(12):
+        name = '../Images/chrome/chrome.%i.png' % i
+        log.info(name)
+        img = imread(name, True)
+        r = fit(img * mask, c, R)
+        log.info("fit: %s", r)
