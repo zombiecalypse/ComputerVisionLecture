@@ -41,15 +41,33 @@ def fit(image, c, R):
 
     # The d coordinate system is relative to the center of the sphere.
 
-    d = (p-c)/R
+    d = (p-c)
+    d_normalized = d/R
     log.debug("Dir: %s", d)
-    r = l.norm(d)
+    r = l.norm(d_normalized)
     theta = acos(r)
     log.debug(u"r:   %s", r)
     log.debug(u"θ:   %s", theta)
 
-    n = np.hstack([d, [-sin(theta)]])
-    return n
+    n = np.concatenate([d_normalized, [-sin(theta)]])
+    d_normalized = np.concatenate([d_normalized, [0]])
+    ret = 2*n + d_normalized
+    return ret/l.norm(ret)
+
+example = np.array([
+            (0.3441,  -0.4300,  -0.8347),
+            (0.2130,  -0.1223,  -0.9694),
+            (0.2708,  -0.2654,  -0.9253),
+            (0.0563,  -0.2280,  -0.9720),
+            (-0.2423,  -0.4071,  -0.8807),
+            (-0.2731,  -0.3663,  -0.8895),
+            ( 0.3198, -0.3610, -0.8760),
+            (-0.0094, -0.3012, -0.9535),
+            ( 0.2074, -0.3342, -0.9194),
+            ( 0.0891, -0.3298, -0.9398),
+            ( 0.1281, -0.0443, -0.9908),
+            (-0.1406, -0.3590, -0.9227),
+            ])
 
 if __name__ == '__main__':
     import sys
@@ -58,7 +76,7 @@ if __name__ == '__main__':
     logging.basicConfig()
     mask = imread('../Images/chrome/chrome.mask.png', True)
     c, R = locate_ball(mask)
-    for i in [22,23,24]: #range(12):
+    for i in range(12):
         name = '../Images/chrome/chrome.%i.png' % i
         log.info(name)
         img = imread(name, True)

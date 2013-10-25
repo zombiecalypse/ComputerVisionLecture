@@ -46,4 +46,4 @@ class ChromeTest(unittest.TestCase):
         img = imread(name, True)
         r = chrome_sphere.fit(img * self.mask, self.c, self.R)
         np.testing.assert_array_almost_equal(
-                x, r, 0.1)
+                x, r, 1)
