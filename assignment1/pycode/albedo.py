@@ -21,11 +21,14 @@ def extract_n_tilde(lights, images):
 
 def albedo_normals(n_tilde):
     norms = np.sqrt(np.sum(n_tilde ** 2, axis=0))
-    albedo = norms
+    albedo = norms.view()
     grey_bedo = np.mean(norms, axis=2)
     grey = np.mean(n_tilde, axis=3)
     log.info('grey_bedo: %s', grey_bedo.shape)
     log.info('grey:      %s', grey.shape)
     log.info('grey[0]:   %s', grey[0].shape)
     normals = np.nan_to_num(np.array([grey[i]/grey_bedo for i in range(3)]))
+    min = albedo.min()
+    max = albedo.max()
+    albedo = (albedo-min)/(max-min)
     return albedo, normals
