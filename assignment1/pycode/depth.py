@@ -34,9 +34,10 @@ def depths(mask, normals):
         normals: width x height x 3 array
     """
     width, height, three = normals.shape
+    assert three == 3
     m = dok_matrix((width*height*2, width*height), dtype=float)
     b = np.zeros(width*height*2, dtype=float)
-    log.info('expected shape: %s', m.shape)
+    log.info('maximal shape: %s', m.shape)
     row = 0
     coords = ConsistentBimap()
     for x in range(width-1):
@@ -79,11 +80,13 @@ def depths(mask, normals):
         except Exception as e:
             log.error('error at (%s, %s)', x, y)
             raise
-    #m_p[row,0] = 1
+    m_p[row,0] = 1
     m_p = m_p.tocsr()
     b = b[:row+1]
     log.info('actual shape: %s', m_p.shape)
-    z_p = lsqr(m_p, b)[0]
+    s = lsqr(m_p, b)
+    z_p = s[0]
+    log.warn('r2norm: %.3f', s[3])
     z = np.zeros((width, height))
     for row,(x,y) in coords.r.items():
         z[x,y] = z_p[row]
