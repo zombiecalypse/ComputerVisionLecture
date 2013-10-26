@@ -7,6 +7,8 @@ from scipy import linalg as l
 import matplotlib.pyplot as plt
 import numpy as np
 
+import matplotlib.cm as cm
+
 import sys
 import logging
 
@@ -31,15 +33,16 @@ al, n = albedo.albedo_normals(n_tilde)
 n = n.transpose([1,2,0])
 
 z = depth.depths(mask, n)
-log.info('shape: %s min: %s max: %s', z.shape, z.min(), z.max())
-
-plt.subplot(2,1,1)
-plt.imshow(al)
-
-plt.subplot(2,1,2)
-plt.imshow(np.abs(n))
+log.info('z shape: %s min: %s max: %s', z.shape, z.min(), z.max())
 
 plt.subplot(2,2,1)
-plt.imshow(np.abs(z))
+plt.imshow(al)
+
+plt.subplot(2,2,2)
+plt.imshow(np.abs(n))
+
+plt.subplot(2,2,3)
+plt.imshow(z, cmap = cm.Greys_r)
+plt.colorbar()
 
 plt.show()

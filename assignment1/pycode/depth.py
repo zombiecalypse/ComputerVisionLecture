@@ -4,7 +4,7 @@ import numpy as np
 import logging
 log = logging.getLogger(__name__)
 
-X,Y,Z = 0,1,2
+Y,X,Z = 0,1,2
 
 class ConsistentBimap(object):
     def __init__(self):
@@ -42,18 +42,25 @@ def depths(mask, normals):
     coords = ConsistentBimap()
     for x in range(width-1):
         for y in range(height-1):
-            if not (mask[x,y] and mask[x+1,y] and mask[x+1,y]): continue
+            if not mask[x,y]: continue
+            if not (mask[x+1,y] and mask[x,y+1] and mask[x-1,y] and mask[x,y-1]):
+                # set border to zero
+                m[row, coords[(x,y)]] = 1
+                b[row] = 0
+                row += 1
+                continue
+
             try:
                 # n_z (z(x+1, y) - z(x, y)) = -n_x
-                m[row, coords[(x+1,y)]] = normals[x,y,Z]
-                m[row, coords[(x,y)]] = -normals[x,y,Z]
-                b[row] = -normals[x,y,X]
+                m[row, coords[(x+1,y)]] = 1
+                m[row, coords[(x,y)]] = -1
+                b[row] = normals[x,y,X]/normals[x,y,Z]
                 row += 1
 
                 # n_z (z(x, y+1) - z(x, y)) = -n_y
-                m[row, coords[(x,y+1)]] = normals[x,y,Z]
-                m[row, coords[(x,y)]] = -normals[x,y,Z]
-                b[row] = -normals[x,y,Y]
+                m[row, coords[(x,y+1)]] = 1
+                m[row, coords[(x,y)]] = -1
+                b[row] = normals[x,y,Y]/normals[x,y,Z]
                 row += 1
             except Exception as e:
                 logging.error('error at (%s, %s)', x, y)
@@ -69,6 +76,7 @@ def depths(mask, normals):
     log.info('range of indices: %s to %s', 
              min(coords.values()),
              max(coords.values()))
+    log.info('range of b: %s %s', b.min(), b.max())
     log.info('number of points: %s', len(coords._map))
     log.info('number of rows:   %s', row)
     log.info('max:    x:%s y:%s',
@@ -80,16 +88,16 @@ def depths(mask, normals):
         except Exception as e:
             log.error('error at (%s, %s)', x, y)
             raise
-    m_p[row,0] = 1
+    m_p[row,2] = 1
     m_p = m_p.tocsr()
     b = b[:row+1]
     log.info('actual shape: %s', m_p.shape)
-    s = lsqr(m_p, b)
+    s = lsqr(m_p, b, atol=1e-3, btol=1e-9, show=True)
     z_p = s[0]
+    z_p = (z_p - z_p.min())/(z_p.max() - z_p.min()) + 0.05
     log.warn('r2norm: %.3f', s[3])
     z = np.zeros((width, height))
     for row,(x,y) in coords.r.items():
         z[x,y] = z_p[row]
-    z.shape = (width, height)
-    z = (z-z.min())/(z.max()-z.min())
+    log.info('z(0,0) = %s', z[0,0])
     return z
