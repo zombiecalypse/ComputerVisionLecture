@@ -1,11 +1,9 @@
 ========
-Octogit
+Computer Vision
 ========
 
-This repository has been created with Octogit.
-
-.. image:: http://myusuf3.github.com/octogit/assets/img/readme_image.png
+![plot](https://raw.github.com/zombiecalypse/ComputerVisionLecture/master/plot.png)
 
 Author
 ======
-Mahdi Yusuf (@myusuf3)
+Aaron Karper

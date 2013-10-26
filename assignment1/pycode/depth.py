@@ -6,6 +6,10 @@ log = logging.getLogger(__name__)
 
 Y,X,Z = 0,1,2
 
+def normalize(z):
+    b,t = np.percentile(z, [5,95])
+    return (z-b)/(t-b)
+
 class ConsistentBimap(object):
     def __init__(self):
         self._map = dict()
@@ -94,7 +98,7 @@ def depths(mask, normals):
     log.info('actual shape: %s', m_p.shape)
     s = lsqr(m_p, b, atol=1e-3, btol=1e-9, show=True)
     z_p = s[0]
-    z_p = (z_p - z_p.min())/(z_p.max() - z_p.min()) + 0.05
+    z_p = normalize(z_p)
     log.warn('r2norm: %.3f', s[3])
     z = np.zeros((width, height))
     for row,(x,y) in coords.r.items():

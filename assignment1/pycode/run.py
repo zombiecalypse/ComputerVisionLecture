@@ -22,11 +22,11 @@ name = sys.argv[1]
 
 mask = imread(template.format(name, 'mask'), True)
 mask3 = np.array([mask, mask, mask]).transpose([1,2,0])
-imgs = []
+images = []
 for i in range(12):
     filename = template.format(name, i)
-    imgs.append(imread(filename))
-imgs = np.array(imgs)
+    images.append(imread(filename))
+imgs = np.array(images)
 log.info(imgs.shape)
 n_tilde = albedo.extract_n_tilde(chrome_sphere.example, imgs)
 al, n = albedo.albedo_normals(n_tilde)
@@ -43,6 +43,9 @@ plt.imshow(np.abs(n))
 
 plt.subplot(2,2,3)
 plt.imshow(z, cmap = cm.Greys_r)
-plt.colorbar()
+
+plt.subplot(2,2,4)
+plt.hist(z.flatten(), 300, range=(0.05,1.10), fc='k', ec='k')
+
 
 plt.show()
