@@ -13,8 +13,7 @@ import sys
 import logging
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-depth.log.setLevel(logging.INFO)
+logging.basicConfig(level=logging.WARN)
 
 
 template = '../Images/{0}/{0}.{1}.png'
@@ -28,12 +27,14 @@ for i in range(12):
     images.append(imread(filename))
 imgs = np.array(images)
 log.info(imgs.shape)
+
 n_tilde = albedo.extract_n_tilde(chrome_sphere.example, imgs)
+
 al, n = albedo.albedo_normals(n_tilde)
+
 n = n.transpose([1,2,0])
 
 z = depth.depths(mask, n)
-log.info('z shape: %s min: %s max: %s', z.shape, z.min(), z.max())
 
 plt.subplot(2,2,1)
 plt.imshow(al)
@@ -46,6 +47,5 @@ plt.imshow(z, cmap = cm.Greys_r)
 
 plt.subplot(2,2,4)
 plt.hist(z.flatten(), 300, range=(0.05,1.10), fc='k', ec='k')
-
 
 plt.show()

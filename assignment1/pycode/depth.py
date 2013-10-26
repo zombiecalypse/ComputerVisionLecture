@@ -47,14 +47,12 @@ def depths(mask, normals):
     for x in range(width-1):
         for y in range(height-1):
             if not mask[x,y]: continue
-            if not (mask[x+1,y] and mask[x,y+1] and mask[x-1,y] and mask[x,y-1]):
+            elif not (mask[x+1,y] and mask[x,y+1] and mask[x-1,y] and mask[x,y-1]):
                 # set border to zero
                 m[row, coords[(x,y)]] = 1
                 b[row] = 0
                 row += 1
-                continue
-
-            try:
+            else:
                 # n_z (z(x+1, y) - z(x, y)) = -n_x
                 m[row, coords[(x+1,y)]] = 1
                 m[row, coords[(x,y)]] = -1
@@ -66,40 +64,25 @@ def depths(mask, normals):
                 m[row, coords[(x,y)]] = -1
                 b[row] = normals[x,y,Y]/normals[x,y,Z]
                 row += 1
-            except Exception as e:
-                logging.error('error at (%s, %s)', x, y)
-                logging.error('row:    %s', row)
-                logging.error('index1: %s', (x+1)+width*y)
-                logging.error('index2: %s', x+width*y)
-                logging.error('index3: %s', x+width*(y+1))
-                logging.error('index4: %s', x+width*y)
-                raise
 
-    # Now we know how many pixels are used
+    # Now we know how many pixels are used and we restrict the matrix to the
+    # rows needed.
     m_p = dok_matrix((row+1, coords.i), dtype=float)
-    log.info('range of indices: %s to %s', 
-             min(coords.values()),
-             max(coords.values()))
-    log.info('range of b: %s %s', b.min(), b.max())
-    log.info('number of points: %s', len(coords._map))
-    log.info('number of rows:   %s', row)
-    log.info('max:    x:%s y:%s',
-             max(k for k,_ in m.keys()),
-             max(k for _,k in m.keys()))
+
     for (x,y), v in m.items():
         try:
             m_p[x,y] = v
         except Exception as e:
             log.error('error at (%s, %s)', x, y)
             raise
-    m_p[row,2] = 1
+    # normalization
+    m_p[row,1] = 1
     m_p = m_p.tocsr()
     b = b[:row+1]
     log.info('actual shape: %s', m_p.shape)
     s = lsqr(m_p, b, atol=1e-3, btol=1e-9, show=True)
     z_p = s[0]
     z_p = normalize(z_p)
-    log.warn('r2norm: %.3f', s[3])
     z = np.zeros((width, height))
     for row,(x,y) in coords.r.items():
         z[x,y] = z_p[row]
