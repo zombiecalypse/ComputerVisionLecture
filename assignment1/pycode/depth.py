@@ -49,10 +49,6 @@ def depths(mask, normals):
             if not mask[x,y]: continue
             elif not (mask[x+1,y] and mask[x,y+1] and mask[x-1,y] and mask[x,y-1]):
                 continue
-                # set border to zero
-                m[row, coords[(x,y)]] = 1
-                b[row] = 0
-                row += 1
             else:
                 # n_z (z(x+1, y) - z(x, y)) = -n_x
                 m[row, coords[(x+1,y)]] = 1
