@@ -13,39 +13,44 @@ import sys
 import logging
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.WARN)
+
+formatter = logging.Formatter('%(asctime)s::%(name)s::%(levelname)s:\t%(message)s')
+logging.basicConfig(level=logging.INFO, formatter=formatter)
 
 
 template = '../Images/{0}/{0}.{1}.png'
-name = sys.argv[1]
 
-mask = imread(template.format(name, 'mask'), True)
-mask3 = np.array([mask, mask, mask]).transpose([1,2,0])
-images = []
-for i in range(12):
-    filename = template.format(name, i)
-    images.append(imread(filename))
-imgs = np.array(images)
-log.info(imgs.shape)
+lights = chrome_sphere.run()
 
-n_tilde = albedo.extract_n_tilde(chrome_sphere.example, imgs)
+for name in ['buddha', 'cat', 'gray', 'horse', 'owl', 'rock']:
+    log.info('Processing %s', name)
 
-al, n = albedo.albedo_normals(n_tilde)
+    mask = imread(template.format(name, 'mask'), True)
+    mask3 = np.array([mask, mask, mask]).transpose([1,2,0])
+    images = []
+    for i in range(12):
+        filename = template.format(name, i)
+        images.append(imread(filename))
+    imgs = np.array(images)
 
-n = n.transpose([1,2,0])
+    n_tilde = albedo.extract_n_tilde(lights, imgs)
 
-z = depth.depths(mask, n)
+    al, n = albedo.albedo_normals(n_tilde)
 
-plt.subplot(2,2,1)
-plt.imshow(al)
+    n = n.transpose([1,2,0])
 
-plt.subplot(2,2,2)
-plt.imshow(np.abs(n))
+    z = depth.depths(mask, n)
 
-plt.subplot(2,2,3)
-plt.imshow(z, cmap = cm.Greys_r)
+    plt.subplot(2,2,1)
+    plt.imshow(al)
 
-plt.subplot(2,2,4)
-plt.hist(z.flatten(), 300, range=(0.05,1.10), fc='k', ec='k')
+    plt.subplot(2,2,2)
+    plt.imshow(np.abs(n))
 
-plt.show()
+    plt.subplot(2,2,3)
+    plt.imshow(z, cmap = cm.Greys_r)
+
+    plt.subplot(2,2,4)
+    plt.hist(z.flatten(), 300, range=(0.05,1.10), fc='k', ec='k')
+
+    plt.savefig('../out/{0}.png'.format(name))

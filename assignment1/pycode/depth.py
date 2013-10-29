@@ -41,13 +41,14 @@ def depths(mask, normals):
     assert three == 3
     m = dok_matrix((width*height*2, width*height), dtype=float)
     b = np.zeros(width*height*2, dtype=float)
-    log.info('maximal shape: %s', m.shape)
+    log.debug('maximal shape: %s', m.shape)
     row = 0
     coords = ConsistentBimap()
-    for x in range(width-1):
-        for y in range(height-1):
+    for x in range(width):
+        for y in range(height):
             if not mask[x,y]: continue
             elif not (mask[x+1,y] and mask[x,y+1] and mask[x-1,y] and mask[x,y-1]):
+                continue
                 # set border to zero
                 m[row, coords[(x,y)]] = 1
                 b[row] = 0
@@ -76,15 +77,15 @@ def depths(mask, normals):
             log.error('error at (%s, %s)', x, y)
             raise
     # normalization
-    m_p[row,1] = 1
+    m_p[row,0] = 1
     m_p = m_p.tocsr()
     b = b[:row+1]
-    log.info('actual shape: %s', m_p.shape)
-    s = lsqr(m_p, b, atol=1e-3, btol=1e-9, show=True)
+    log.debug('actual shape: %s', m_p.shape)
+    s = lsqr(m_p, b, atol=1e-3, btol=1e-6, show=True)
     z_p = s[0]
     z_p = normalize(z_p)
     z = np.zeros((width, height))
     for row,(x,y) in coords.r.items():
         z[x,y] = z_p[row]
-    log.info('z(0,0) = %s', z[0,0])
+    log.debug('z(0,0) = %s', z[0,0])
     return z
