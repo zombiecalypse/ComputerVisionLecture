@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
+import pylab
 from matplotlib.patches import CirclePolygon
 
 import logging
@@ -9,7 +10,14 @@ logging.basicConfig(level=logging.INFO)
 
 import fun
 fun.log.level = logging.INFO
+from random import shuffle
 
+def cmap_as_list(cmap,n=20):
+    if type(cmap) == str:
+        cmap = pylab.get_cmap(cmap)
+    p = np.linspace(0, 1, n)
+    cols = cmap(p)
+    return cols
 
 class StereoVision(object):
     def __init__(self, l, r):
@@ -18,32 +26,41 @@ class StereoVision(object):
         self.fig = plt.figure()
         self.pointl = []
         self.pointr = []
+        self.F = None
+        self.cmap = cmap_as_list('hsv')
+        shuffle(self.cmap)
 
     def onclick(self, event):
         r = self.resolve(event.inaxes)
         try:
             log.debug('x=%f, y=%f %s'%(event.xdata, event.ydata, r))
 
-            circ = CirclePolygon((event.xdata, event.ydata), 5, color='r',
+            circ = CirclePolygon((event.xdata, event.ydata), 5,
                                  alpha=0.75)
             if r == 'r':
+                col = self.cmap[len(self.pointr)]
+                circ.set_color(col)
                 self.ax1.add_patch(circ)
                 self.pointr.append((event.xdata, event.ydata))
             else:
+                col = self.cmap[len(self.pointl)]
+                circ.set_color(col)
                 self.ax2.add_patch(circ)
                 self.pointl.append((event.xdata, event.ydata))
             self.fig.canvas.draw()
 
-            if len(self.pointr) > 8 and len(self.pointl) > 8:
-                log.info("Calculate F now...")
-                F = self.calculateF()
-                log.info("done...")
-                log.info("F: %s", F)
+            if len(self.pointr) > 8 and len(self.pointl) > 8 and self.F is None:
+                self.calculateF()
         except:
             pass
 
     def calculateF(self):
-        return fun.get_F(tuple(self.pointl[:9]), tuple(self.pointr[:9]))
+        self.F = 'calculate'
+        log.info("Calculate F now...")
+        minlen = min(self.pointl.shape[0], self.pointr.shape[0])
+        self.F = fun.get_F(tuple(self.pointl[:minlen]), tuple(self.pointr[:minlen]))
+        log.info("done...")
+        log.info("F: %s", self.F)
 
     def resolve(self, ax):
         return "l" if ax == self.ax2 else "r"
