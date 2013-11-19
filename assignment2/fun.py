@@ -74,8 +74,8 @@ def get_F(P1, P2):
     A, T1, T2 = produce_matrix(P1, P2)
     u, s, vh = np.linalg.svd(A)
     f = vh[8]
-    f = f/l.norm(f)
     f.shape = (3,3)
+    f = f/l.norm(f)
     f = enforce_rank2(f)
     f = dot(T2.T, f, T1)
     # Check functionality: OK
