@@ -1,0 +1,146 @@
+\documentclass{paper}
+
+%\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{hyperref}
+
+
+% load package with ``framed'' and ``numbered'' option.
+%\usepackage[framed,numbered,autolinebreaks,useliterate]{mcode}
+
+% something NOT relevant to the usage of the package.
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{18pt}
+
+
+
+
+
+
+\usepackage[utf8]{inputenc} 
+
+\usepackage{listings} 
+\lstset{% 
+   language=Python, 
+   basicstyle=\small\ttfamily, 
+} 
+
+
+
+\title{Binocular stereo}
+
+
+
+\author{Aaron Karper\\08-915-894}
+% //////////////////////////////////////////////////
+
+
+\begin{document}
+
+
+
+\maketitle
+
+
+% Add figures:
+%\begin{figure}[t]
+%%\begin{center}
+%\quad\quad   \includegraphics[width=1\linewidth]{ass2}
+%%\end{center}
+%
+%\label{fig:performance}
+%\end{figure}
+
+\section{Epipolar lines estimation (50 points)}
+This part is basically applying SVD in different ways.
+
+First we notice that $x'^T F x$ can be solved for $F$ with a linear system of $x', x$ correspondences:
+
+\begin{align*}
+x'^TFx &= 0\\
+\begin{pmatrix}x' &y' &1\end{pmatrix} 
+\begin{pmatrix}f_1& f_2 &f_3\\ f_4& f_5& f_6\\ f_7& f_8& f_9\end{pmatrix}
+\begin{pmatrix}x\\ y\\ 1\end{pmatrix} &= 0\\ 
+\underbrace{\begin{pmatrix}x'x & x'y & x' & y'x & y'y & y'& x & y& 1\end{pmatrix}}_{A_i} \begin{pmatrix}
+f_1\\
+\vdots\\
+f_9
+\end{pmatrix} &= 0
+\end{align*}
+
+Given 8 pairs, we can solve this system:
+\begin{align*}
+\text{if } A &= U\, S\, V^T\\
+A\, f &= 0\\
+\Rightarrow f &\propto V_8
+\end{align*}
+
+This procedure works even when we use more than 8 points.
+
+To enforce that an epipole exists, we need to ensure that $F$ is rank 2:
+
+\begin{align*}
+\text{if } \hat F &= U\, S\, V^T\\
+S' &= \begin{pmatrix}
+S_1 & 0& 0\\
+0& S_2 & 0\\
+0 & 0& 0
+\end{pmatrix}&\text{remove smallest singular value}\\
+F &= U\, S'\, V^T
+\end{align*}
+
+The epipole is now $V_3$, the ``removed'' basis vector. The second epipole is $U^T_3$ conversely, because
+\[p^T\, F\, p' = (p^T\, F\, p')^T = p'^T\, F^T\, p = p'^T\, V\, S\, U^T\, p\]
+
+Now when we have a point on one image $p$, we can construct the epipolar line as
+\begin{align*}
+n&=F\, p\\
+0&=n_1\, x + n_2\, y + n_3\\
+y &= -\frac{n_1\, x-n_3}{n_2}
+\end{align*}
+
+The theory was simple enough, the implementation took a few tries, toil, blood, and tears to get right\footnote{A first prototype went bottom up after $>8 h$ of trying to make it work: It consistently calculated ridiculous coordinates for the epipoles and the epipolar lines missed the image by a huge margin.}. Further grabbing input to octave was difficult, it does not seem possible to read from
+both subplots. Instead I allow to grab 3 points from the left image and display their epipolar lines on 
+the other image, then the other way around.
+
+\subsection{Model reconstruction (50 points)}
+\paragraph{RANSAC}
+For the first part, we randomly select 8 points and calculate the fundamental matrix $F_i$ as above. 
+After this, we check $p'^T\, F_1 p\approx 0$ for all points (as a measure of 
+quality of the estimated matrix). We allow a number of points $n$ to be outliers, for which the
+product is simply ignored. If it is good enough, we stop, else we start over with a different
+sample. The calculation is done as in the first part.
+
+\paragraph{Essential matrix from $F$ and intrinsic parameters}
+\[E = K\, F\]
+\paragraph{Getting rotation and translation}
+We know
+\[ E = R\,[t]_\times = R\, T\]
+for some unitary matrix $R$ and some skew-symmetric matrix $T$. We again 
+calculate bases so that $E$ becomes a simple scaling in it (SVD):
+\[ E = U \, S'\, V^T\]
+
+Note that $U$ and $V$ are unitary, that is $U^T\,U = I = V^T\, V$.
+
+Now first we ensure that $E$ has rank 2 and is for a valid pinhole camera:
+$S = diag(\frac{S'_1 +S'_2}{2}, \frac{S'_1 +S'_2}{2}, 0)$.
+\begin{align*}
+	E 	&=  R\, T \\
+	 	&= U\, S\, V^T\\
+	 	&= \underbrace{U\, W^{-1}\, V^T}_{R}\, \underbrace{V\, W\, S\, V^T}_{T} &\text{for bijective } W
+\end{align*}
+Now choose $W$ so that $R$ is unitary and $T$ is skew-symmetric. This is obtained for example by
+\[ W =\begin{pmatrix}
+0 & -1 &0\\
+1& 0&0\\
+0&0&1
+\end{pmatrix} \]
+, the third euler rotation ($z$-axis).
+
+\paragraph{Apologies}
+I couldn't submit source for this assignment, due to the PLDI\footnote{\url{http://conferences.inf.ed.ac.uk/pldi2014/}} deadline last week.
+\end{document}
