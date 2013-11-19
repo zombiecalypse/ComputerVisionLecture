@@ -74,9 +74,9 @@ FDnew = FD;
 % ensure rank 2:
 FDnew(3,3) = 0;
 
-FM = FU*FDnew*FV' ;
+FM = FU*FDnew*FV'
 
-% Plotting epipolar line:
+% Plotting epipolar lines
 
 
 [rows cols] = size(left_image);
@@ -92,7 +92,8 @@ imagesc(right_image);
 colormap(gray);
 title('Corresponding epipolar line');
 
-for i=0:7
+puts('3 points from left image');
+for i=1:3
 		
 		subplot(1,2,1);
 		[left_x left_y, b] = ginput(1);
@@ -115,10 +116,47 @@ for i=0:7
 		% Epipole corresponds to smallest singular value (ideally 0)
 		left_epipole = FV(:,3);
 		left_epipole = left_epipole/left_epipole(3)
+
+		right_epipole = FM * left_epipole;
+		right_epipole = right_epipole/right_epipole(3)
 		
 		left_epipolar_x = 1:2*rows;
 		left_epipolar_y = left_y + (left_epipolar_x-left_x)*(left_epipole(2)-left_y)/(left_epipole(1)-left_x);
 		subplot(1,2,1);
 		hold on;
 		plot(left_epipolar_x,left_epipolar_y,list(mod(i,8)+1));
+end
+puts('3 points from right image');
+for i=1:3
+		
+		subplot(1,2,2);
+		[left_x right_y, b] = ginput(1);
+		hold on;
+		plot(right_x,right_y,'r*');
+
+		% Finding the epipolar line on the right image:
+		right_P = [right_x; right_y; 1];
+
+		left_P = FM'*right_P;  % FM translates the two
+
+		left_epipolar_x=1:2*rows;
+		% ax+by+c=0
+		% => y = (-c-ax)/b
+		left_epipolar_y=(-left_P(3)-left_P(1)*left_epipolar_x)/left_P(2);
+		subplot(1,2,1);
+		hold on;
+		plot(left_epipolar_x,left_epipolar_y,list(mod(i,8)+1));
+
+		% Epipole corresponds to smallest singular value (ideally 0)
+		right_epipole = FV(:,3);
+		right_epipole = right_epipole/right_epipole(3)
+
+		left_epipole = FM * left_epipole;
+		left_epipole = left_epipole/left_epipole(3)
+		
+		right_epipolar_x = 1:2*rows;
+		right_epipolar_y = right_y + (right_epipolar_x-right_x)*(right_epipole(2)-right_y)/(right_epipole(1)-right_x);
+		subplot(1,2,1);
+		hold on;
+		plot(right_epipolar_x,right_epipolar_y,list(mod(i,8)+1));
 end
